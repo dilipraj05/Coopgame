@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
+  <title>The Ciphered Truth - 2 Player Mystery</title>
+  <style>
+    /* ---------- Base & Particles ---------- */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', 'Roboto', system-ui, sans-serif;
+      background: #0a0a14;
+      color: #e0d7c6;
+      display: flex; justify-content: center; align-items: center;
+      min-height: 100vh; padding: 15px; overflow-x: hidden;
+      position: relative;
+    }
+    #particles {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      z-index: 0; pointer-events: none;
+    }
+    .main-container {
+      position: relative; z-index: 1;
+      max-width: 500px; width: 100%;
+      background: rgba(20, 20, 35, 0.85); backdrop-filter: blur(20px);
+      border-radius: 24px;
+      box-shadow: 0 25px 60px rgba(0,0,0,0.8), 0 0 40px rgba(212,175,55,0.4);
+      padding: 20px; border: 1px solid rgba(212,175,55,0.3);
+      animation: fadeSlideIn 0.6s ease-out;
+    }
+    @keyframes fadeSlideIn {
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ---------- Typography ---------- */
+    h1 {
+      font-family: 'Courier New', monospace; color: #d4af37; text-align: center;
+      font-size: 2.2rem; letter-spacing: 3px;
+      text-shadow: 0 0 20px #d4af37aa, 0 0 40px #b8960c;
+      margin-bottom: 5px;
+    }
+    .subtitle { text-align: center; font-style: italic; color: #a89b7c; margin-bottom: 20px; font-size: 0.9rem; }
+
+    /* ---------- Status & Buttons ---------- */
+    .role-badge {
+      display: inline-block;
+      background: linear-gradient(135deg, #d4af37, #b8960c);
+      color: #0a0a0a; padding: 6px 18px; border-radius: 30px;
+      font-weight: bold; font-size: 0.9rem; letter-spacing: 0.5px;
+      margin-bottom: 15px; box-shadow: 0 4px 15px rgba(212,175,55,0.5);
+    }
+    .status-pill {
+      background: #2a2a38; padding: 8px 15px; border-radius: 20px;
+      font-size: 0.85rem; color: #ccc; margin: 10px 0; text-align: center;
+      border: 1px solid #444; transition: all 0.3s;
+    }
+    .connected { border-color: #4caf50; color: #8bc34a; }
+    .waiting { border-color: #d4af37; color: #d4af37; animation: pulseGlow 2s infinite; }
+    @keyframes pulseGlow {
+      0%,100% { box-shadow: 0 0 8px #d4af3766; }
+      50% { box-shadow: 0 0 18px #d4af37; }
+    }
+    input, button {
+      width: 100%; padding: 14px; margin: 8px 0; border-radius: 12px;
+      border: none; font-size: 1rem; font-weight: 500;
+      transition: all 0.3s ease; outline: none;
+    }
+    input {
+      background: #2c2c3f; color: #fff; border: 1px solid #444;
+      box-shadow: inset 0 2px 5px rgba(0,0,0,0.5);
+    }
+    input:focus { border-color: #d4af37; box-shadow: 0 0 15px #d4af3780; }
+    button {
+      background: linear-gradient(145deg, #d4af37, #b38b2c);
+      color: #0f0f0f; font-weight: bold; cursor: pointer;
+      text-transform: uppercase; letter-spacing: 1px;
+      box-shadow: 0 6px 20px rgba(212,175,55,0.4);
+      border: 1px solid #f1c40f44;
+      transition: transform 0.1s ease, box-shadow 0.2s;
+    }
+    button:active { transform: scale(0.96); }
+    button:disabled {
+      background: #3a3a4a; color: #777; box-shadow: none;
+      border-color: #555; cursor: not-allowed;
+    }
+
+    /* ---------- Clue Cards & Typewriter ---------- */
+    .clue-card {
+      background: rgba(25, 25, 40, 0.9); border-left: 5px solid #d4af37;
+      padding: 12px 15px; margin: 12px 0; border-radius: 8px;
+      backdrop-filter: blur(5px); animation: fadeIn 0.5s ease;
+      overflow: hidden;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateX(-10px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+    .chapter-title {
+      color: #d4af37; font-weight: bold; margin-top: 20px;
+      text-transform: uppercase; letter-spacing: 2px;
+      text-shadow: 0 0 10px #d4af37;
+    }
+    .typewriter {
+      display: inline-block;
+      overflow: hidden; white-space: nowrap;
+      border-right: 2px solid #d4af37;
+      animation: typing 1.5s steps(30, end), blink-caret 0.75s step-end infinite;
+    }
+    @keyframes typing {
+      from { width: 0; }
+      to { width: 100%; }
+    }
+    @keyframes blink-caret {
+      from, to { border-color: transparent; }
+      50% { border-color: #d4af37; }
+    }
+
+    /* ---------- Result & Victory ---------- */
+    .result-message { font-weight: bold; padding: 8px; border-radius: 8px; margin: 10px 0; text-align: center; }
+    .success-message { color: #9bff9b; background: #1e3a1e; }
+    .error-message { color: #ff8a8a; background: #3a1e1e; }
+    .victory {
+      background: linear-gradient(145deg, #1e3a1e, #0f2b0f);
+      font-size: 1.6rem; padding: 25px; border: 2px solid #d4af37;
+      border-radius: 20px; text-shadow: 0 0 15px #d4af37;
+      animation: confettiPulse 1s ease-in-out;
+      text-align: center;
+    }
+    @keyframes confettiPulse {
+      0% { transform: scale(0.9); }
+      50% { transform: scale(1.03); background: #2a4a2a; }
+      100% { transform: scale(1); }
+    }
+
+    /* ---------- Confetti ---------- */
+    .confetti { position: fixed; top:0; left:0; width:100%; height:100%; pointer-events: none; z-index:999; }
+    .confetti-piece {
+      position: absolute; width: 10px; height: 10px; background: #f1c40f;
+      animation: fall linear forwards;
+    }
+    @keyframes fall { to { transform: translateY(100vh) rotate(720deg); opacity:0; } }
+
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+  <canvas id="particles"></canvas>
+  <div class="main-container" id="app">
+    <h1>🔎 CIPHERED TRUTH</h1>
+    <div class="subtitle">2‑player co‑op mystery</div>
+
+    <!-- Lobby -->
+    <div id="lobbyScreen">
+      <button id="createRoomBtn" style="font-size:1.1rem;">🔐 Create Room</button>
+      <div id="roomIdBox" class="status-pill hidden" style="margin:15px 0; background:#1e1e2a;">
+        Room Code: <span id="roomIdText" style="color:#d4af37; font-weight:bold;"></span>
+        <br><small style="color:#aaa;">Tell your partner this 4‑digit code</small>
+      </div>
+      <div style="display:flex; gap:10px; margin:15px 0;">
+        <input type="text" id="joinInput" placeholder="Enter 4‑digit code" style="flex:2;" maxlength="4">
+        <button id="joinRoomBtn" style="flex:1;">Join</button>
+      </div>
+      <div id="connectionStatus" class="status-pill">Connecting to server...</div>
+    </div>
+
+    <!-- Game -->
+    <div id="gameScreen" class="hidden">
+      <div class="role-badge" id="roleLabel"></div>
+      <div class="status-pill" id="partnerConnectionPill">🟢 Partner online</div>
+      <div id="clueArea">
+        <div class="chapter-title" id="chapterDisplay"></div>
+        <div id="cluesList"></div>
+        <div id="puzzleQuestion" style="margin-top:15px; font-size:1.1rem;"></div>
+      </div>
+      <input type="text" id="answerInput" placeholder="Your combined answer..." autocomplete="off">
+      <button id="submitAnswerBtn">🔓 Unlock</button>
+      <div id="resultDisplay" class="result-message"></div>
+    </div>
+  </div>
+
+  <script>
+    (function() {
+      // ----- WebSocket setup with automatic reconnect -----
+      const wsUrl = `${location.protocol === 'https:' ? 'wss:' : 'ws:'}//${location.host}`;
+      let ws = null;
+      let reconnectAttempts = 0;
+      const maxReconnect = 5;
+
+      function connectWebSocket() {
+        if (ws && ws.readyState === WebSocket.OPEN) return;
+        ws = new WebSocket(wsUrl);
+        updateStatus("Connecting to server...", "waiting");
+
+        ws.onopen = () => {
+          reconnectAttempts = 0;
+          updateStatus("Connected! Create or Join a room.", "connected");
+        };
+
+        ws.onmessage = (event) => {
+          const data = JSON.parse(event.data);
+          if (data.type === "roomCreated") {
+            document.getElementById("roomIdText").textContent = data.roomId;
+            document.getElementById("roomIdBox").classList.remove("hidden");
+            updateStatus("Room created! Waiting for partner...", "waiting");
+          } else if (data.type === "joined") {
+            updateStatus("Joined room! Waiting for partner...", "connected");
+            document.getElementById("partnerConnectionPill").textContent = "🟢 Partner online";
+            document.getElementById("partnerConnectionPill").classList.add("connected");
+          } else if (data.type === "start") {
+            myRole = data.role;
+            startGame();
+          } else if (data.type === "partnerSolved") {
+            partnerSolved = true;
+            if (currentChapter < chapters.length - 1) {
+              advanceChapter();
+            } else {
+              showVictory();
+            }
+          } else if (data.type === "partnerLeft") {
+            document.getElementById("partnerConnectionPill").textContent = "🔴 Partner disconnected";
+            document.getElementById("partnerConnectionPill").classList.remove("connected");
+          } else if (data.type === "gameOver") {
+            showVictory();
+          } else if (data.type === "error") {
+            updateStatus(data.message, "error");
+          }
+        };
+
+        ws.onclose = () => {
+          updateStatus("Disconnected. Retrying...", "error");
+          if (reconnectAttempts < maxReconnect) {
+            reconnectAttempts++;
+            setTimeout(connectWebSocket, 2000);
+          } else {
+            updateStatus("Could not connect to server. Please refresh.", "error");
+          }
+        };
+      }
+
+      connectWebSocket();
+
+      // ----- Game Data -----
+      const chapters = [
+        {
+          title: "CHAPTER I: The Missing Key",
+          detective: { clue: "Desk drawer has a keyhole with symbol ♆ (Neptune). Sticky note: 'Planet order from sun'.", partial: "You need the planet's position number." },
+          analyst: { clue: "Orrery database: Neptune is the 8th planet.", partial: "Combine to form a 2-digit code." },
+          question: "Enter the 2‑digit key code:", answer: "08"
+        },
+        {
+          title: "CHAPTER II: The Cipher Wheel",
+          detective: { clue: "A cipher wheel with letters shifted. Message: 'Khoor, zruog'. (Looks like Caesar).", partial: "Shift value unknown." },
+          analyst: { clue: "Dr. Voss's calendar: 'Shift 3 for my favourite number'.", partial: "Decrypt with shift 3." },
+          question: "Decoded message (lowercase, no punctuation):", answer: "hello world"
+        },
+        {
+          title: "CHAPTER III: The Chemical Lock",
+          detective: { clue: "Vial labeled 'Aqua Regia' and a note: 'Mix with Au to reveal safe word'.", partial: "Au is gold, but what's the result?" },
+          analyst: { clue: "Lab notes: Aqua Regia dissolves gold, producing chloroauric acid. Code: 'golden'.", partial: "The safe word is 'golden'." },
+          question: "Safe word from chemical reaction:", answer: "golden"
+        },
+        {
+          title: "CHAPTER IV: The Family Crest",
+          detective: { clue: "Portrait of Voss family crest: raven, rose, sword. Motto: 'Sangue e Onore'.", partial: "Italian: Blood and Honour. But which name?" },
+          analyst: { clue: "Census records: Voss ancestral name 'Corvus' (raven). Rose -> Rosalind Voss.", partial: "Password is 'corvus'." },
+          question: "Password from family crest:", answer: "corvus"
+        },
+        {
+          title: "CHAPTER V: The Final Confession",
+          detective: { clue: "Hidden letter signed 'E.V.' with coordinates: 48.8566° N, 2.3522° E.", partial: "Paris. E.V. could be Elara Voss?" },
+          analyst: { clue: "Financial records: large transfer to 'E. Vance'. Vance is an art thief.", partial: "Full name is Elias Vance." },
+          question: "Who orchestrated the disappearance? (full name):", answer: "elias vance"
+        }
+      ];
+
+      let currentChapter = 0, myRole = null, partnerSolved = false;
+
+      // ----- UI References -----
+      const lobbyScreen = document.getElementById("lobbyScreen");
+      const gameScreen = document.getElementById("gameScreen");
+      const createBtn = document.getElementById("createRoomBtn");
+      const joinBtn = document.getElementById("joinRoomBtn");
+      const joinInput = document.getElementById("joinInput");
+      const roomIdText = document.getElementById("roomIdText");
+      const connectionStatusDiv = document.getElementById("connectionStatus");
+      const roleLabel = document.getElementById("roleLabel");
+      const chapterDisplay = document.getElementById("chapterDisplay");
+      const cluesList = document.getElementById("cluesList");
+      const puzzleQuestion = document.getElementById("puzzleQuestion");
+      const answerInput = document.getElementById("answerInput");
+      const submitBtn = document.getElementById("submitAnswerBtn");
+      const resultDisplay = document.getElementById("resultDisplay");
+
+      function updateStatus(text, className) {
+        connectionStatusDiv.textContent = text;
+        connectionStatusDiv.className = "status-pill " + (className || "");
+      }
+
+      // ----- Lobby Actions -----
+      createBtn.addEventListener("click", () => {
+        if (ws && ws.readyState === WebSocket.OPEN) {
+          ws.send(JSON.stringify({ type: "create" }));
+          updateStatus("Creating room...", "waiting");
+        }
+      });
+
+      joinBtn.addEventListener("click", () => {
+        const code = joinInput.value.trim();
+        if (code && ws && ws.readyState === WebSocket.OPEN) {
+          ws.send(JSON.stringify({ type: "join", roomId: code }));
+          updateStatus("Joining room...", "waiting");
+        }
+      });
+
+      // ----- Game Flow -----
+      function startGame() {
+        lobbyScreen.classList.add("hidden");
+        gameScreen.classList.remove("hidden");
+        roleLabel.textContent = myRole === "detective" ? "🕵️ Detective Miles (Study)" : "🔬 Analyst Cora (Lab)";
+        loadChapter(0);
+      }
+
+      function loadChapter(index) {
+        currentChapter = index;
+        partnerSolved = false;
+        const ch = chapters[index];
+        chapterDisplay.textContent = ch.title;
+        const myClues = myRole === "detective" ? ch.detective : ch.analyst;
+        // Typewriter effect for clues
+        cluesList.innerHTML = `
+          <div class="clue-card"><span class="typewriter">${myClues.clue}</span></div>
+          <div class="clue-card" style="border-left-color:#b8a04b;"><em>${myClues.partial}</em></div>`;
+        puzzleQuestion.innerHTML = `<strong>❓ ${ch.question}</strong>`;
+        answerInput.value = "";
+        resultDisplay.textContent = "";
+        resultDisplay.className = "result-message";
+        answerInput.disabled = false;
+        submitBtn.disabled = false;
+      }
+
+      function advanceChapter() {
+        currentChapter++;
+        loadChapter(currentChapter);
+      }
+
+      submitBtn.addEventListener("click", () => {
+        if (!ws || ws.readyState !== WebSocket.OPEN) return;
+        const ans = answerInput.value.trim().toLowerCase();
+        if (ans === chapters[currentChapter].answer) {
+          ws.send(JSON.stringify({ type: "solvePuzzle", puzzleIndex: currentChapter }));
+          resultDisplay.textContent = "✅ Correct! Notifying partner...";
+          resultDisplay.className = "result-message success-message";
+          answerInput.disabled = true;
+          submitBtn.disabled = true;
+          if (currentChapter === chapters.length - 1) {
+            ws.send(JSON.stringify({ type: "gameOver" }));
+            showVictory();
+          } else {
+            if (partnerSolved) advanceChapter();
+            else resultDisplay.textContent = "Waiting for partner to solve...";
+          }
+        } else {
+          resultDisplay.textContent = "❌ Incorrect. Try again.";
+          resultDisplay.className = "result-message error-message";
+        }
+      });
+
+      function showVictory() {
+        gameScreen.innerHTML = `
+          <div class="victory">
+            <h2 style="color:#d4af37;">🏆 CASE CLOSED</h2>
+            <p>You found Dr. Voss and exposed Elias Vance!</p>
+            <p style="font-size:0.9rem;">Great teamwork, detectives.</p>
+          </div>`;
+        createConfetti();
+      }
+
+      function createConfetti() {
+        const conf = document.createElement("div");
+        conf.className = "confetti";
+        for (let i = 0; i < 70; i++) {
+          const p = document.createElement("div");
+          p.className = "confetti-piece";
+          p.style.left = Math.random() * 100 + "%";
+          p.style.animationDelay = Math.random() * 2 + "s";
+          p.style.background = ['#d4af37','#e74c3c','#3498db','#2ecc71'][Math.floor(Math.random()*4)];
+          p.style.width = (Math.random()*8+6)+"px";
+          p.style.height = (Math.random()*8+6)+"px";
+          p.style.animationDuration = (Math.random()*3+2)+"s";
+          conf.appendChild(p);
+        }
+        document.body.appendChild(conf);
+        setTimeout(() => conf.remove(), 5000);
+      }
+
+      // ----- Particle Background -----
+      const canvas = document.getElementById("particles");
+      const ctx = canvas.getContext("2d");
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      const particles = [];
+      for (let i = 0; i < 50; i++) {
+        particles.push({
+          x: Math.random() * canvas.width,
+          y: Math.random() * canvas.height,
+          radius: Math.random() * 2 + 1,
+          speedX: Math.random() * 0.3 - 0.15,
+          speedY: Math.random() * 0.3 - 0.15,
+          color: `rgba(212,175,55,${Math.random()*0.5+0.2})`
+        });
+      }
+      function animateParticles() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        particles.forEach(p => {
+          p.x += p.speedX;
+          p.y += p.speedY;
+          if (p.x < 0 || p.x > canvas.width) p.speedX *= -1;
+          if (p.y < 0 || p.y > canvas.height) p.speedY *= -1;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+          ctx.fillStyle = p.color;
+          ctx.fill();
+        });
+        requestAnimationFrame(animateParticles);
+      }
+      animateParticles();
+      window.addEventListener("resize", () => {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+      });
+    })();
+  </script>
+</body>
+</html>
